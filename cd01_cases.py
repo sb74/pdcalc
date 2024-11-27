@@ -1,5 +1,6 @@
 from p_drop import *
 from fittings import *
+from PipeSection import PipeSection
 
 # AMT Previous Case - Suction Loss
 # Fittings (additional are K values only, not Crane)

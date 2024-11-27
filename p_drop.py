@@ -3,16 +3,6 @@
 import math
 import numpy as np
 
-class PipeSection:
-    def __init__(self, diameter, length, fittings_k=None, elevation_change=0):
-        """
-        Initialize a pipe section with its properties
-        """
-        self.diameter = diameter
-        self.length = length
-        self.elevation_change = elevation_change
-        self.fittings_k =  fittings_k if fittings_k is not None else []
-
 def calculate_pressure_drop(
     pipe_sections,        # list of PipeSection objects
     flow_rate,            # m³/s

@@ -12,27 +12,16 @@ def suction_loss_worst_case() -> Dict[str, Any]:
     Returns:
         Dict containing calculation results and section-by-section breakdown
     """
-    seawater_density = 1025
-    seawater_viscosity = 0.001075
+    # Assuming worst case at 5degC
+    seawater_density = 1028
+    seawater_viscosity = 0.00155
     
     pipe_sections = [
         PipeSection(
-            diameter=0.3,
-            length=20,
-            fittings_k=[0.5, 0.5],
-            elevation_change=2
-        ),
-        PipeSection(
-            diameter=0.25,
-            length=15,
-            fittings_k=[10],
-            elevation_change=1.5
-        ),
-        PipeSection(
-            diameter=0.2,
-            length=15,
-            fittings_k=[0.5],
-            elevation_change=1.5
+            diameter=0.3366,
+            length=22,
+            fittings_k=[1.19, 0.595, 0.595, 0.119, 0.3808],
+            elevation_change=0
         )
     ]
     

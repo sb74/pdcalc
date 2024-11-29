@@ -31,7 +31,7 @@ def calculate_pressure_drop(
     }
     
     def calculate_friction_factor(reynolds, diameter):
-        # Calculate friction factor using implicit iterative colebrook-White equation
+        # Calculate friction factor using implicit iterative Colebrook-White equation
         if reynolds < 2000:
             return 64 / reynolds
 
@@ -49,6 +49,7 @@ def calculate_pressure_drop(
             if abs(f_new - f) < 1e-6:
                 break
             f = f_new
+    
         return f
     
     # Calculate pressure drop for each section

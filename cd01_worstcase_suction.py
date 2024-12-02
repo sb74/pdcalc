@@ -36,11 +36,11 @@ def suction_loss_worst_case() -> Dict[str, Any]:
         'flow_rate': 0.277,
         'fluid_density': seawater_density,
         'fluid_viscosity': seawater_viscosity,
-        'pipe_roughness': 0.00015
+        'pipe_roughness': 0.0000457
     }
     
     return calculate_pressure_drop(**parameters)
 
 if __name__ == "__main__":
     results = suction_loss_worst_case()
-    display_results(results)
+    display_results(results, 1028)

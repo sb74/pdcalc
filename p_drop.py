@@ -1,18 +1,18 @@
-#TODO tkinter gui and .exe
-#TODO fully Crane-ify
 import math
 import numpy as np
+from typing import List, Dict, Union
+from PipeSection import PipeSection
 
 def calculate_pressure_drop(
-    pipe_sections,        # list of PipeSection objects
-    flow_rate,            # m³/s
-    fluid_density,        # kg/m³
-    fluid_viscosity,      # Pa·s
-    pipe_roughness,       # meters
-    gravity=9.81          # m/s²
-    ):
+    pipe_sections: List['PipeSection'],
+    flow_rate: float,            # m³/s
+    fluid_density: float,        # kg/m³
+    fluid_viscosity: float,      # Pa·s
+    pipe_roughness: float,       # meters
+    gravity: float = 9.81        # m/s²
+    ) -> Dict[str, Union[float, List[Dict]]]:
     """
-    Calculate pressure drop in a piping system with varying diameters, based on Crane TP 410.
+    Calculate head loss in a piping system with varying diameters, based on Crane TP 410.
     
     Args:
         pipe_sections: List of PipeSection objects defining the system
@@ -23,38 +23,67 @@ def calculate_pressure_drop(
         gravity: Acceleration due to gravity in m/s²
     
     Returns:
-        Dictionary containing pressure drops and flow characteristics for each section
+        Dictionary containing head losses and flow characteristics for each section
     """
     total_results = {
-        'total_pressure_drop': 0,
+        'total_head_loss': 0,
         'sections': []
     }
     
-    def calculate_friction_factor(reynolds, diameter):
-        # Calculate friction factor using implicit iterative Colebrook-White equation
-        if reynolds < 2000:
-            return 64 / reynolds
-
-        def colebrook_white(f):
-            return 1/math.sqrt(f) + 2 * math.log10(
-                (pipe_roughness/(3.7*diameter)) + (2.51/(reynolds*math.sqrt(f)))
-            )
+    def calculate_friction_factor(reynolds: float, diameter: float) -> float:
+        """
+        Calculate friction factor using Colebrook-White equation for turbulent flow
+        and analytical solution for laminar flow.
         
-        # Solve using Newton-Raphson method
-        f = 0.02  # Initial guess
-        for _ in range(20):
-            f_new = f - colebrook_white(f)/(
-                -1/(2*f**(3/2)) - 2.51/(reynolds*f*math.sqrt(f)*math.log(10))
-            )
-            if abs(f_new - f) < 1e-6:
-                break
-            f = f_new
+        Args:
+            reynolds: Reynolds number
+            diameter: Pipe diameter in meters
+        
+        Returns:
+            Darcy friction factor
+        """
+        # Laminar flow
+        if reynolds < 2300:
+            return 64 / reynolds
+            
+        # Transitional flow - use linear interpolation
+        elif 2300 <= reynolds < 4000:
+            f_lam = 64 / 2300
+            f_turb = _colebrook_white_turbulent(4000, diameter)
+            return f_lam + (f_turb - f_lam) * (reynolds - 2300) / (4000 - 2300)
+            
+        # Turbulent flow
+        else:
+            return _colebrook_white_turbulent(reynolds, diameter)
     
+    def _colebrook_white_turbulent(reynolds: float, diameter: float) -> float:
+        """
+        Solve Colebrook-White equation for turbulent flow using the Serghides
+        explicit approximation, which is accurate to within 0.0023% of the
+        implicit equation.
+        
+        Args:
+            reynolds: Reynolds number
+            diameter: Pipe diameter in meters
+            
+        Returns:
+            Darcy friction factor for turbulent flow
+        """
+        relative_roughness = pipe_roughness / diameter
+        
+        # Serghides approximation terms
+        A = -2 * math.log10(relative_roughness/3.7 + 12/reynolds)
+        B = -2 * math.log10(relative_roughness/3.7 + 2.51*A/reynolds)
+        C = -2 * math.log10(relative_roughness/3.7 + 2.51*B/reynolds)
+        
+        # Calculate friction factor
+        f = (A - (B-A)**2 / (C-2*B+A))**-2
+        
         return f
     
-    # Calculate pressure drop for each section
+    # Calculate head loss for each section
     for i, section in enumerate(pipe_sections):
-        # Calculate pipe area and velocity for this section
+        # Calculate pipe area and velocity
         area = math.pi * (section.diameter/2)**2
         velocity = flow_rate / area
         
@@ -66,18 +95,21 @@ def calculate_pressure_drop(
         
         # Calculate major losses (friction) - Darcy Equation
         h_major = f * (section.length/section.diameter) * (velocity**2)/(2*gravity)
-        dp_major = h_major * fluid_density * gravity
         
         # Calculate minor losses (fittings)
         k_total = sum(section.fittings_k)
         h_minor = k_total * (velocity**2)/(2*gravity)
-        dp_minor = h_minor * fluid_density * gravity
         
-        # Calculate elevation pressure change
-        dp_elevation = fluid_density * gravity * section.elevation_change
+        # Total head loss for this section including elevation change
+        h_section = h_major + h_minor + section.elevation_change
         
-        # Calculate total pressure drop for this section
-        dp_section = dp_major + dp_minor + dp_elevation
+        # Determine flow regime with more detailed classification
+        if reynolds < 2300:
+            flow_regime = 'Laminar'
+        elif 2300 <= reynolds < 4000:
+            flow_regime = 'Transitional'
+        else:
+            flow_regime = 'Turbulent'
         
         section_results = {
             'section_number': i + 1,
@@ -86,14 +118,14 @@ def calculate_pressure_drop(
             'velocity': velocity,
             'reynolds_number': reynolds,
             'friction_factor': f,
-            'pressure_drop_friction': dp_major,
-            'pressure_drop_fittings': dp_minor,
-            'pressure_drop_elevation': dp_elevation,
-            'total_section_pressure_drop': dp_section,
-            'flow_regime': 'Laminar' if reynolds < 2300 else 'Turbulent'
+            'head_loss_friction': h_major,
+            'head_loss_fittings': h_minor,
+            'elevation_change': section.elevation_change,
+            'total_section_head_loss': h_section,
+            'flow_regime': flow_regime
         }
         
         total_results['sections'].append(section_results)
-        total_results['total_pressure_drop'] += dp_section
+        total_results['total_head_loss'] += h_section
     
     return total_results

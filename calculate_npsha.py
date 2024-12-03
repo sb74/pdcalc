@@ -8,12 +8,12 @@ def calculate_npsha(
     vapor_pressure_head: float          # meters of head
 ) -> pd.DataFrame:
     """
-    Calculate Net Positive Suction Head Available (NPSHA) for a pump system.
+    Calculate Net Positive Suction Head Available (NPSHa) for a pump system.
     """
     # Calculate velocity head
     velocity_head = (flow_velocity ** 2) / (2 * 9.81)
     
-    # Calculate NPSHA in meters
+    # Calculate NPSHa in meters
     npsha_meters = (
         atmospheric_pressure_head +
         static_head -
@@ -63,7 +63,7 @@ def calculate_npsha(
     pd.set_option('display.max_columns', None)
     
     # Print with custom formatting
-    print("\nNPSHA Calculation Breakdown:")
+    print("\nNPSHa Calculation Breakdown:")
     print("=" * 50)
     print(df.iloc[:-1].to_string())
     print("-" * 50)

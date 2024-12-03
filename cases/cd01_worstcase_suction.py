@@ -51,7 +51,7 @@ flow_velocity = results['sections'][-1]['velocity']
 
 npsha_results = calculate_npsha(
     atmospheric_pressure_head=10.33,        # Standard atmospheric pressure at sea level
-    static_head=0,                        # MODIFY AS REQUIRED
+    static_head=0,                          # MODIFY AS REQUIRED
     friction_head_loss=total_suction_loss,  # Total pipe friction and fitting losses
     flow_velocity=flow_velocity,            # Flow velocity at pump suction flange
     vapor_pressure_head=0.238               # Seawater at 5°C (~0.872 kPa)

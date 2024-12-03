@@ -1,3 +1,5 @@
+# CD01 PUMP STUDY
+# Discharge calculation for worst-case ballast tank 8C
 from p_drop import *
 from fittings import *
 from display_results import *
